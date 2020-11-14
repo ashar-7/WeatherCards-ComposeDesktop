@@ -3,6 +3,7 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.transitionDefinition
 import androidx.compose.animation.transition
 import androidx.compose.desktop.Window
+import androidx.compose.foundation.ScrollableColumn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -23,6 +24,7 @@ import androidx.compose.ui.input.pointer.pointerMoveFilter
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+@ExperimentalLayout
 fun main() = Window(title = "Weather") {
 
     WeatherCardsTheme {
@@ -35,6 +37,7 @@ fun main() = Window(title = "Weather") {
     }
 }
 
+@ExperimentalLayout
 @Composable
 fun weatherCalendar(modifier: Modifier) {
     Column(modifier = modifier.background(Color.Unspecified)) {
@@ -72,7 +75,6 @@ fun weatherCalendar(modifier: Modifier) {
         Spacer(Modifier.height(8.dp))
         cardsGrid(
             items = weekWeather,
-            numColumns = 3,
             modifier = Modifier.fillMaxSize()
         ) { item, modifier ->
             var rotated by remember { mutableStateOf(false) }
@@ -102,33 +104,20 @@ fun weatherCalendar(modifier: Modifier) {
     }
 }
 
-@OptIn(ExperimentalStdlibApi::class)
+@ExperimentalLayout
 @Composable
 fun <T> cardsGrid(
     items: List<T>,
-    numColumns: Int,
     modifier: Modifier,
     itemContent: @Composable (item: T, modifier: Modifier) -> Unit
 ) {
-    val rows = items.chunked(numColumns).map { rowItems ->
-        // Fill list with nulls for empty spaces
-        rowItems + List<T?>(numColumns - rowItems.size) { null }
-    }
-    Column(modifier, verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        rows.forEach { rowItems ->
-            Row(horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterHorizontally)) {
-                rowItems.forEach { item ->
-                    when (item) {
-                        null -> Spacer(Modifier.weight(1f))
-                        else -> itemContent(item, Modifier.size(200.dp, 125.dp))
-                    }
-                }
-
-//                BUG: https://issuetracker.google.com/issues/172947246
-//                val weight = numColumns - items.size
-//                if(weight > 0) {
-//                    Spacer(Modifier.weight(weight.toFloat()))
-//                }
+    ScrollableColumn(modifier) {
+        FlowRow(
+            mainAxisSpacing = 16.dp,
+            crossAxisSpacing = 16.dp
+        ) {
+            items.forEach { item ->
+                itemContent(item, Modifier.preferredSize(200.dp, 125.dp))
             }
         }
     }
